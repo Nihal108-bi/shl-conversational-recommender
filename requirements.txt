@@ -1,3 +1,5 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 fastapi>=0.115,<0.116
 uvicorn[standard]>=0.30,<0.31
 pydantic>=2.9,<3
@@ -6,3 +8,4 @@ sentence-transformers>=3.0,<4
 rank-bm25==0.2.2
 numpy>=1.26,<2.2
 python-dotenv>=1.0,<2
+torch==2.2.2+cpu
