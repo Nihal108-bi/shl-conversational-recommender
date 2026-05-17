@@ -256,7 +256,17 @@ $env:GROQ_API_KEY="gsk_..."
 uvicorn app.main:app --reload --port 8000
 ```
 
-## Testing
+## Test
+```bash
+curl localhost:8000/health
+# {"status":"ok"}
+
+curl -X POST localhost:8000/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Hiring a senior Java engineer with Spring and SQL"}]}'
+
+```  
+## Run the tests
 
 Run deterministic offline unit tests:
 
