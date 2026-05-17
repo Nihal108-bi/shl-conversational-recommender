@@ -1,4 +1,4 @@
-"""Hybrid retrieval: BM25 + dense (MiniLM) with reciprocal rank fusion.
+git commit -m "feat(retrieval): hybrid BM25 + dense (MiniLM) retriever with RRF fusion""""Hybrid retrieval: BM25 + dense (MiniLM) with reciprocal rank fusion.
 
 BM25 catches exact-name and exact-skill queries (Docker, OPQ32r, AWS).
 Dense catches intent-style queries ("call centre agents", "senior leadership").
