@@ -1,50 +1,77 @@
+---
+title: SHL Conversational Recommender
+emoji: 🎯
+colorFrom: orange
+colorTo: red
+sdk: docker
+app_port: 7860
+pinned: false
+short_description: Conversational SHL assessment recommender (FastAPI + Groq + RAG)
+---
+
 # SHL Conversational Assessment Recommender
 
-Recruiter-friendly FastAPI service that turns a hiring brief into a grounded shortlist of SHL assessments. The assistant can clarify vague requirements, recommend catalog-backed assessments, refine a previous shortlist, compare named products, and refuse off-topic or unsafe requests.
+A recruiter-friendly FastAPI service that takes a hiring manager from a vague intent such as "I'm hiring a Java developer" to a grounded shortlist of SHL assessments through dialogue. Built for the SHL Labs AI Intern take-home.
 
-Built for the SHL Labs AI Intern take-home by **Nihal Jaiswal**.
+Built by [Nihal Jaiswal](https://github.com/Nihal108-bi).
 
 ## Demo
 
-**Live Space / Demo Link:** [Add your deployed Space or app URL here](https://huggingface.co/spaces/your-username/shl-recommender)
+**Live Hugging Face Space:** `https://<your-space>.hf.space`
+
+**API Docs:** `https://<your-space>.hf.space/docs`
 
 **Home Page Preview:** [Open screenshot](./Home_Page.png)
 
 ![SHL Recommender Home Page](./Home_Page.png)
 
-## Why this project matters
+## What It Does
 
-Hiring managers often describe a role in loose language: "senior Java developer", "graduate trainee scheme", or "leadership assessment". This project converts that intent into a structured, catalog-grounded assessment recommendation flow.
+- **Clarifies** when the brief is too vague to act on, for example "we need an assessment for senior leadership".
+- **Recommends** 1-10 items from the SHL catalog once it has enough context, with names, test type codes, and canonical URLs.
+- **Refines** when the user changes constraints mid-conversation, such as dropping AWS, adding SQL, or switching from screening to development.
+- **Compares** named assessments using catalog descriptions rather than the LLM's prior knowledge.
+- **Stays in scope** by refusing legal advice, general hiring strategy, off-topic prompts, and prompt-injection attempts.
+- **Returns grounded URLs** because every recommendation is resolved from the local catalog index.
 
-The system is designed to be practical for an evaluation setting:
+## Why This Project Matters
 
-- **Grounded output:** every recommendation URL comes from the local SHL catalog.
-- **Conversational handling:** supports clarification, recommendation, refinement, comparison, and refusal.
-- **Hybrid retrieval:** combines exact keyword search with semantic retrieval.
-- **Testable offline:** `GROQ_API_KEY=stub` runs deterministic tests without network LLM calls.
-- **Deployable:** includes a Render-ready `render.yaml`.
+Hiring teams often describe roles in natural language instead of structured assessment criteria. This service bridges that gap: it asks for missing context when needed, retrieves relevant SHL catalog items, and uses an LLM only to select and explain from retrieved candidates.
 
-## Core Features
-
-- **Clarifies vague briefs** before recommending products too early.
-- **Recommends 1-10 SHL assessments** with canonical names, URLs, and test type codes.
-- **Refines existing shortlists** when users ask to drop, add, replace, or change focus.
-- **Compares named assessments** using catalog descriptions instead of model memory.
-- **Defends scope** against legal advice requests, general hiring-process advice, and prompt injection.
-- **Keeps state client-side** by requiring the caller to send full conversation history on every `/chat` call.
+The result is a practical assessment recommender that is conversational for recruiters, constrained for evaluation, and transparent enough for technical review.
 
 ## Tech Stack
 
 | Area | Technology |
 |---|---|
 | API | FastAPI, Uvicorn |
-| Schemas | Pydantic |
-| LLM | Groq client, default `llama-3.3-70b-versatile` |
+| Schemas | Pydantic v2 |
+| LLM | Groq, default `llama-3.3-70b-versatile` |
 | Retrieval | BM25 via `rank-bm25`, dense embeddings via `sentence-transformers/all-MiniLM-L6-v2` |
 | Ranking | Reciprocal Rank Fusion |
 | Data | Local SHL product catalog JSON |
 | Testing | Pytest, deterministic LLM stub |
-| Deployment | Render web service config |
+| Deployment | Hugging Face Spaces with Docker, `app_port: 7860` |
+
+## API
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /` | Landing page |
+| `GET /health` | Health check, returns `{"status": "ok"}` |
+| `GET /docs` | Swagger UI with copy-paste-ready examples |
+| `GET /redoc` | ReDoc API documentation |
+| `POST /chat` | Stateless chat endpoint |
+
+Try the deployed Space:
+
+```bash
+curl https://<your-space>.hf.space/health
+
+curl -X POST https://<your-space>.hf.space/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"messages":[{"role":"user","content":"Hiring a senior Java engineer with Spring and SQL"}]}'
+```
 
 ## Project Structure
 
@@ -55,26 +82,27 @@ flowchart TD
     ROOT --> APP["app/"]
     ROOT --> DATA["data/"]
     ROOT --> TESTS["tests/"]
-    ROOT --> README["README.md"]
-    ROOT --> APPROACH["APPROACH.md"]
-    ROOT --> RENDER["render.yaml"]
-    ROOT --> REQS["requirements.txt"]
-    ROOT --> HOME["Home_Page.png"]
+    ROOT --> README["README.md<br/>HF Spaces metadata + project guide"]
+    ROOT --> DOCKER["Dockerfile<br/>HF Spaces Docker deployment"]
+    ROOT --> DOCKERIGNORE[".dockerignore<br/>Keeps image small and secrets out"]
+    ROOT --> APPROACH["APPROACH.md<br/>Submission approach document"]
+    ROOT --> REQS["requirements.txt<br/>Python dependencies + CPU torch"]
+    ROOT --> HOME["Home_Page.png<br/>Home page screenshot"]
 
-    APP --> MAIN["main.py<br/>FastAPI app, startup lifecycle, /, /health, /chat"]
+    APP --> MAIN["main.py<br/>FastAPI app, lifespan startup, /, /health, /chat"]
     APP --> AGENT["agent.py<br/>Router plus clarify/recommend/refine/compare/refuse handlers"]
     APP --> RETRIEVER["retriever.py<br/>Hybrid BM25 + dense retrieval with RRF"]
-    APP --> INDEXER["indexer.py<br/>Builds and warms catalog index"]
-    APP --> CATALOG["catalog.py<br/>Catalog loader and test type code mapping"]
-    APP --> LLM["llm.py<br/>Groq wrapper, JSON mode, retries, offline stub"]
+    APP --> INDEXER["indexer.py<br/>Warms catalog index and embedding model"]
+    APP --> CATALOG["catalog.py<br/>Catalog loader and K/P/A/B/S/C/D code mapping"]
+    APP --> LLM["llm.py<br/>Groq wrapper, retries, JSON mode, offline stub"]
     APP --> PROMPTS["prompts.py<br/>Router, selector, refine, compare, refusal prompts"]
-    APP --> SCHEMAS["schemas.py<br/>Pydantic request and response models"]
+    APP --> SCHEMAS["schemas.py<br/>Pydantic API contract"]
 
     DATA --> CATALOG_JSON["shl_product_catalog.json<br/>Local SHL assessment catalog"]
     DATA --> TRACES["traces/<br/>C1-C10 public conversation traces"]
 
-    TESTS --> UNIT["test_agent.py<br/>Schema, catalog, retrieval, and agent behavior tests"]
-    TESTS --> REPLAY["replay.py<br/>Replay trace conversations and report Recall@10"]
+    TESTS --> UNIT["test_agent.py<br/>Schema, catalog, retrieval, and agent flow tests"]
+    TESTS --> REPLAY["replay.py<br/>Trace replay and Recall@10 report"]
 ```
 
 ## Code Flow
@@ -164,57 +192,31 @@ sequenceDiagram
     API-->>User: reply, recommendations, end_of_conversation
 ```
 
-## API Contract
+## Hugging Face Spaces Deployment
 
-### Health
+This project is configured for **Hugging Face Spaces Docker deployment**. The README front matter tells Spaces to use Docker and expose the FastAPI service on port `7860`.
 
-```http
-GET /health
+```yaml
+sdk: docker
+app_port: 7860
 ```
 
-Response:
+Deployment checklist:
 
-```json
-{"status": "ok"}
+1. Create a new Hugging Face Space.
+2. Choose **Docker** as the Space SDK.
+3. Push this repository to the Space.
+4. Add `GROQ_API_KEY` in **Settings -> Repository secrets**.
+5. Wait for the Docker build to finish.
+6. Open `https://<your-space>.hf.space/docs` and test `/chat`.
+
+The `Dockerfile` installs dependencies, pre-warms the SHL retriever with `python -m app.indexer`, exposes port `7860`, and starts:
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 7860 --workers 1
 ```
 
-### Chat
-
-```http
-POST /chat
-Content-Type: application/json
-```
-
-Request:
-
-```json
-{
-  "messages": [
-    {
-      "role": "user",
-      "content": "Hiring a senior backend engineer. Core Java, Spring, SQL, AWS, Docker."
-    }
-  ]
-}
-```
-
-Response:
-
-```json
-{
-  "reply": "Here is a focused shortlist from the SHL catalog.",
-  "recommendations": [
-    {
-      "name": "Core Java (Advanced Level)",
-      "url": "https://www.shl.com/products/product-catalog/...",
-      "test_type": "K"
-    }
-  ],
-  "end_of_conversation": false
-}
-```
-
-## Quickstart
+## Local Development
 
 ```bash
 python -m venv .venv
@@ -231,13 +233,13 @@ pip install -r requirements.txt
 # Warm the retriever and embedding model
 python -m app.indexer
 
-# Run the API
+# Run the API locally
 uvicorn app.main:app --reload --port 8000
 ```
 
-Open:
+Open locally:
 
-- App home page: `http://localhost:8000/`
+- Home page: `http://localhost:8000/`
 - Swagger docs: `http://localhost:8000/docs`
 - Health check: `http://localhost:8000/health`
 
@@ -256,17 +258,17 @@ $env:GROQ_API_KEY="gsk_..."
 uvicorn app.main:app --reload --port 8000
 ```
 
-## Test
+## Test the API Locally
+
 ```bash
 curl localhost:8000/health
-# {"status":"ok"}
 
 curl -X POST localhost:8000/chat \
   -H 'Content-Type: application/json' \
   -d '{"messages":[{"role":"user","content":"Hiring a senior Java engineer with Spring and SQL"}]}'
+```
 
-```  
-## Run the tests
+## Run Tests
 
 Run deterministic offline unit tests:
 
@@ -283,18 +285,6 @@ python -m tests.replay
 ```
 
 The replay script reads `data/traces/C1.md` through `C10.md`, simulates the user turns, and reports Recall@10 against the final ground-truth shortlist in each trace.
-
-## Deployment
-
-This repository includes `render.yaml` for Render deployment.
-
-1. Push the project to GitHub.
-2. Create a new Render Web Service.
-3. Use the included `render.yaml` or configure manually:
-   - Build command: `pip install -r requirements.txt && python -m app.indexer`
-   - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1`
-   - Health check path: `/health`
-4. Add `GROQ_API_KEY` in the Render dashboard.
 
 ## Design Decisions
 
@@ -322,4 +312,5 @@ When `GROQ_API_KEY=stub`, the Groq wrapper returns deterministic responses. This
 - URLs are catalog-backed.
 - The service is stateless and accepts full conversation history.
 - Public traces can be replayed locally through `tests/replay.py`.
+- Hugging Face Spaces deployment is configured through README metadata and `Dockerfile`.
 
