@@ -1,13 +1,14 @@
 ---
 title: SHL Conversational Recommender
 emoji: 🎯
-colorFrom: orange
-colorTo: red
+colorFrom: red
+colorTo: yellow
 sdk: docker
 app_port: 7860
 pinned: false
-short_description: Conversational SHL assessment recommender (FastAPI + Groq + RAG)
+short_description: SHL assessment recommender (FastAPI + Groq RAG)
 ---
+
 
 # SHL Conversational Assessment Recommender
 
