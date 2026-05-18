@@ -18,13 +18,10 @@ Built by [Nihal Jaiswal](https://github.com/Nihal108-bi).
 
 ## Demo
 
-**Live Hugging Face Space:** `https://<your-space>.hf.space`
+**Live Hugging Face Space:** https://nihal108-bi-shl-conversational-recommender.hf.space/
 
-**API Docs:** `https://<your-space>.hf.space/docs`
+**API Docs:** https://nihal108-bi-shl-conversational-recommender.hf.space/docs
 
-**Home Page Preview:** [Open screenshot](./Home_Page.png)
-
-![SHL Recommender Home Page](./Home_Page.png)
 
 ## What It Does
 
